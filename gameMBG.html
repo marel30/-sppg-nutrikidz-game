@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kepala Koki SPPG: MBG Sehat</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f4f7f5;
+  --panel:#ffffff;
+  --ink:#122620;
+  --mute:#52685f;
+  --line:#dce5e0;
+  --brand:#0d5c3f;
+  --brand-ink:#ffffff;
+  --accent:#d97706;
+  --gold:#f59e0b;
+  --bad:#dc2626;
+  --bad-bg:#fef2f2;
+  --ok:#16a34a;
+  --ok-bg:#f0fdf4;
+  color-scheme:light;
+  box-sizing:border-box;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--ink);font-family:"Plus Jakarta Sans",system-ui,-apple-system,sans-serif}
+#app{display:flex;flex-direction:column;height:100%}
+#stage{position:relative;flex:1 1 0;min-height:0;overflow:hidden}
+#c{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:manipulation}
+#stage.flash::after{content:"";position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 0 6px var(--bad),inset 0 0 60px var(--bad);animation:fl 1.2s ease-out forwards}
+@keyframes fl{0%{opacity:1}100%{opacity:0}}
+#hud{position:absolute;left:10px;top:10px;display:flex;gap:6px;pointer-events:none;font-size:12px;font-weight:700}
+#hud span{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:3px 8px;box-shadow:0 2px 4px rgba(0,0,0,0.04)}
+#toast{position:absolute;left:50%;top:40px;transform:translateX(-50%);max-width:92%;padding:6px 12px;border-radius:10px;font-weight:700;font-size:12px;text-align:center;background:var(--ink);color:#fff;opacity:0;transition:opacity .2s;pointer-events:none;box-shadow:0 4px 12px rgba(0,0,0,0.15)}
+#toast.on{opacity:1}#toast.bad{background:var(--bad);color:#fff}#toast.ok{background:var(--ok);color:#fff}
+
+/* Panel bawah dirancang pas dan compact agar tidak menutupi area penting */
+#panel{flex:none;max-height:50vh;display:flex;flex-direction:column;background:var(--panel);border-top:3px solid var(--brand);padding:6px 10px calc(env(safe-area-inset-bottom,0px) + 8px);font-size:11.5px;gap:5px;box-shadow:0 -4px 16px rgba(0,0,0,0.05)}
+@media(min-width:820px){#app{flex-direction:row}#panel{width:380px;max-height:none;border-top:0;border-left:3px solid var(--brand)}}
+
+.stu{display:flex;gap:5px;overflow-x:auto;padding-bottom:2px;flex:none}
+.sc{flex:none;min-width:88px;border:1px solid var(--line);background:#fafafa;color:var(--ink);border-radius:10px;padding:4px 6px;font:inherit;text-align:left;cursor:pointer;line-height:1.15}
+.sc.on{border:2px solid var(--brand);background:rgba(13,92,63,.06)}.sc.dn{opacity:.5}
+.sc b{display:block;font-size:11.5px}.sc small{display:block;color:var(--mute);font-size:9.5px}
+.al{display:inline-block;margin-top:1px;padding:0 5px;border-radius:999px;background:var(--bad-bg);color:var(--bad);font-size:9.5px;font-weight:800}
+.al.no{background:var(--ok-bg);color:var(--ok)}
+
+#nut{display:grid;grid-template-columns:1fr 1fr;gap:2px 10px;flex:none}
+.nb{font-size:10.5px}.nb .r{display:flex;justify-content:space-between;font-weight:700}.nb .r em{font-style:normal;color:var(--mute);font-weight:500}
+.trk{height:8px;border-radius:5px;background:var(--line);position:relative;overflow:hidden;margin-top:1px}
+.fil{position:absolute;left:0;top:0;bottom:0;border-radius:5px;background:var(--accent);transition:width .3s,background .3s}
+.fil.ok{background:var(--ok)}.fil.hi{background:var(--bad)}
+.zone{position:absolute;top:0;bottom:0;background:rgba(13,92,63,.18)}
+.dl{font-style:normal;font-weight:700;color:var(--ok);margin-left:4px;animation:dl 1.6s forwards}.dl.m{color:var(--mute)}
+@keyframes dl{0%{opacity:1}70%{opacity:1}100%{opacity:0}}
+
+#msg{flex:none}
+.alert,.okbox,.note{border-radius:8px;padding:4px 8px;font-size:11px;font-weight:700}
+.alert{background:var(--bad-bg);color:var(--bad);border:1px solid rgba(220,38,38,.2)}
+.okbox{background:var(--ok-bg);color:var(--ok);border:1px solid rgba(22,163,74,.2)}
+.note{background:#f8fafc;color:var(--mute);border:1px solid var(--line);font-weight:500}
+
+/* Area daftar bahan diperkecil ukurannya sedikit agar tombol - dan + muat sempurna */
+#ing{flex:1 1 auto;min-height:75px;max-height:140px;overflow-y:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(98px,1fr));gap:4px;align-content:start;-webkit-overflow-scrolling:touch}
+.it{border:1px solid var(--line);background:#fafafa;border-radius:10px;padding:3px 5px;display:flex;align-items:center;gap:3px;font-size:10.5px}
+.it.bad{border-color:var(--bad);background:var(--bad-bg)}
+.it .nm{flex:1;min-width:0;line-height:1.05;font-weight:700}.it .nm small{display:block;color:var(--mute);font-size:8.5px;font-weight:500}
+.it button{width:22px;height:22px;border-radius:6px;border:0;background:var(--brand);color:var(--brand-ink);font:inherit;font-weight:700;cursor:pointer;padding:0;flex:none}
+.it button.m{background:#e2e8f0;color:var(--ink)}.it b{min-width:10px;text-align:center;font-weight:800}
+
+#act{display:flex;gap:6px;flex:none}
+.btn{flex:1;border:0;border-radius:10px;padding:7px;font:inherit;font-weight:800;font-size:12px;background:var(--brand);color:var(--brand-ink);cursor:pointer}
+.btn.sec{background:#e2e8f0;color:var(--ink)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.warn{background:#fffbeb;color:#b45309;border:1px solid rgba(245,158,11,.3);border-radius:8px;padding:4px 8px;font-size:11px;font-weight:700;margin-top:2px}
+#med{flex:none;font-size:11px;color:var(--mute);line-height:1.2;font-weight:500;background:#f8fafc;padding:4px 7px;border-radius:7px;border:1px solid var(--line)}
+button:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="stage"><canvas id="c"></canvas><div id="hud"></div><div id="toast"></div></div>
+  <div id="panel">
+    <div id="stu" class="stu"></div>
+    <div id="med"></div>
+    <div id="nut"></div>
+    <div id="msg"></div>
+    <div id="ing"></div>
+    <div id="act"></div>
+  </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+"use strict";
+const ING=[
+  {id:'nasi',n:'Nasi putih',e:'🍚',c:0xf4efe0,kcal:195,carb:42,prot:4,vit:0,cat:'A'},
+  {id:'ayam',n:'Ayam',e:'🍗',c:0xc9822b,kcal:165,carb:0,prot:20,vit:5,cat:'B'},
+  {id:'telur',n:'Telur',e:'🥚',c:0xf3e3b5,kcal:75,carb:1,prot:6,vit:8,cat:'B',a:'telur'},
+  {id:'ikan',n:'Ikan',e:'🐟',c:0x7fa7c9,kcal:120,carb:0,prot:22,vit:10,cat:'B',a:'ikan'},
+  {id:'udang',n:'Udang',e:'🦐',c:0xf08a6a,kcal:100,carb:1,prot:20,vit:5,cat:'B',a:'udang'},
+  {id:'tempe',n:'Tempe',e:'🟫',c:0xa88458,kcal:110,carb:9,prot:10,vit:5,cat:'B'},
+  {id:'tahu',n:'Tahu',e:'⬜',c:0xf0e2a8,kcal:70,carb:2,prot:8,vit:3,cat:'B'},
+  {id:'keju',n:'Keju',e:'🧀',c:0xf5c22d,kcal:110,carb:1,prot:7,vit:10,cat:'B',a:'keju'},
+  {id:'bayam',n:'Sayur bayam',e:'🥬',c:0x3f9a4a,kcal:25,carb:4,prot:3,vit:35,cat:'C'},
+  {id:'wortel',n:'Wortel',e:'🥕',c:0xf07f1c,kcal:35,carb:8,prot:1,vit:35,cat:'C'},
+  {id:'pisang',n:'Pisang',e:'🍌',c:0xf6dc4a,kcal:90,carb:23,prot:1,vit:15,cat:'D'},
+  {id:'jeruk',n:'Jeruk',e:'🍊',c:0xf59a23,kcal:50,carb:12,prot:1,vit:40,cat:'D'},
+];
+const TARGET={
+  kcal:{label:'Kalori',unit:'kkal',goal:700,min:85,max:130},
+  carb:{label:'Karbohidrat',unit:'g',goal:100,min:75,max:130},
+  prot:{label:'Protein',unit:'g',goal:28,min:90,max:150},
+  vit:{label:'Vitamin',unit:'%',goal:100,min:100,max:200},
+};
+const STU=[
+  {n:'Rina',k:'XI IPA 2',a:['udang'],r:'reaksi: ruam, bibir bengkak, sesak napas'},
+  {n:'Dito',k:'X-3',a:[],r:'tidak ada riwayat alergi'},
+  {n:'Sari',k:'XII IPS 1',a:['keju'],r:'reaksi: mual, ruam, perut kembung'},
+  {n:'Bagas',k:'X-1',a:['ikan'],r:'reaksi: gatal dan muntah'},
+  {n:'Lia',k:'XI IPS 3',a:['telur'],r:'reaksi: ruam kulit dan batuk'},
+  {n:'Nadia',k:'XII IPA 2',a:['udang','keju'],r:'reaksi: ruam dan sesak, hindari keduanya'},
+];
+
+const $=id=>document.getElementById(id), ingBy=Object.fromEntries(ING.map(i=>[i.id,i]));
+const S={cur:0,delta:null,lastId:null,done:false,st:[]};
+function reset(){ S.cur=0; S.delta=null; S.lastId=null; S.done=false; S.st=STU.map(()=>({tray:{},served:false,warns:0,score:0})); }
+reset();
+const cur=()=>S.st[S.cur], score=()=>S.st.reduce((a,x)=>a+x.score,0);
+function tot(tray){ const t={kcal:0,carb:0,prot:0,vit:0}; for(const id in tray) for(const k in t) t[k]+=ingBy[id][k]*tray[id]; return t; }
+function rep(tray){ const t=tot(tray), r={}, low=[], hi=[]; for(const k in TARGET){ const T=TARGET[k], p=Math.round(t[k]/T.goal*100), st=p<T.min?'low':p>T.max?'hi':'ok'; r[k]={v:Math.round(t[k]),pct:p,st}; if(st==='low') low.push(T.label); if(st==='hi') hi.push(T.label); } return {r,low,hi,ok:!low.length&&!hi.length}; }
+function conf(i){ const a=STU[i].a; return Object.keys(S.st[i].tray).filter(id=>ingBy[id].a&&a.includes(ingBy[id].a)); }
+function add(id,d){
+  if(S.done) return; const c=cur(), g=ingBy[id];
+  if(c.served) return toast('Ompreng ini sudah disajikan.');
+  const q=(c.tray[id]||0)+d; if(q<0) return; if(q>3) return toast('Maksimal 3 porsi per bahan');
+  const before=tot(c.tray); if(q===0) delete c.tray[id]; else c.tray[id]=q;
+  const after=tot(c.tray); S.delta={}; for(const k in after) S.delta[k]=after[k]-before[k]; S.lastId=d>0?id:null; 
+  if(d>0&&g.a&&STU[S.cur].a.includes(g.a)){ c.warns++; danger('BAHAYA! '+STU[S.cur].n+' alergi '+g.a+'. '+g.n+' mengkontaminasi ompreng!'); }
+  renderLive();
+}
+function clearTray(){ if(S.done||cur().served) return; cur().tray={}; S.delta=null; S.lastId=null; renderLive(); }
+function serve(){
+  const c=cur(), r=rep(c.tray); if(S.done||c.served||conf(S.cur).length||!r.ok||!Object.keys(c.tray).length) return;
+  c.served=true; c.score=Math.max(40,100-c.warns*10); toast('✅ Ompreng '+STU[S.cur].n+' disajikan (+'+c.score+')','ok');
+  const n=S.st.findIndex(x=>!x.served); if(n<0) S.done=true; else S.cur=n; S.delta=null; S.lastId=null; renderAll();
+}
+function pick(i){ S.cur=i; S.delta=null; S.lastId=null; renderAll(); }
+
+let tt; function toast(m,k){ const t=$('toast'); t.textContent=m; t.className='on '+(k||''); clearTimeout(tt); tt=setTimeout(()=>t.className='',3200); }
+function danger(m){ toast('⚠️ '+m,'bad'); const s=$('stage'); s.classList.remove('flash'); void s.offsetWidth; s.classList.add('flash'); }
+function renderStu(){ const keep=$('stu').scrollLeft;
+  $('stu').innerHTML=STU.map((s,i)=>'<button class="sc'+(i===S.cur?' on':'')+(S.st[i].served?' dn':'')+'" data-a="stu" data-v="'+i+'"><b>'+(S.st[i].served?'✓ ':'')+s.n+'</b><small>'+s.k+'</small>'+(s.a.length?'<span class="al">🚫 '+s.a.join(', ')+'</span>':'<span class="al no">aman</span>')+'</button>').join('');
+  $('stu').scrollLeft=keep; const a=$('stu').children[S.cur]; if(a&&a.scrollIntoView) a.scrollIntoView({block:'nearest',inline:'nearest'}); }
+function renderNut(){ const r=rep(cur().tray).r, d=S.delta; let h='';
+  for(const k in TARGET){ const T=TARGET[k], x=r[k], sc=T.max*1.15, z0=T.min/sc*100, z1=Math.min(100,T.max/sc*100);
+    h+='<div class="nb"><div class="r"><span>'+T.label+(d&&d[k]?'<i class="dl'+(d[k]<0?' m':'')+'">'+(d[k]>0?'+':'')+Math.round(d[k])+'</i>':'')+'</span><em>'+x.v+'/'+T.goal+' '+T.unit+' · '+x.pct+'%</em></div><div class="trk"><div class="zone" style="left:'+z0+'%;width:'+(z1-z0)+'%"></div><div class="fil '+(x.st==='ok'?'ok':x.st==='hi'?'hi':'')+'" style="width:'+Math.min(100,x.pct/sc*100)+'%"></div></div></div>'; }
+  $('nut').innerHTML=h; }
+function renderMsg(){ const c=cur(), cf=conf(S.cur), r=rep(c.tray), has=Object.keys(c.tray).length; let h;
+  if(S.done) h='<div class="okbox">🏆 Semua siswa terlayani! Total Skor: '+score()+'</div>';
+  else if(c.served) h='<div class="okbox">Ompreng '+STU[S.cur].n+' sudah disajikan.</div>';
+  else if(cf.length) h='<div class="alert">⚠️ KONTAMINASI: Alergi terdeteksi! ('+cf.map(id=>ingBy[id].n).join(', ')+').</div>';
+  else if(!has) h='<div class="note">Pilih bahan makanan sesuai kebutuhan gizi & skrining alergi siswa.</div>';
+  else if(r.ok) h='<div class="okbox">Gizi seimbang & aman alergi. Siap disajikan!</div>';
+  else h=(r.hi.length?'<div class="warn">🍽️ Porsi berlebih ('+r.hi.join(', ')+'). Sesuaikan agar pas.</div>':'')+(r.low.length?'<div class="note">Kurang: '+r.low.join(', ')+'.</div>':'');
+  $('msg').innerHTML=h; }
+function renderMed(){ const s=STU[S.cur]; $('med').innerHTML='🩺 <b>'+s.n+'</b> ('+s.k+') — '+(s.a.length?'<b style="color:var(--bad)">Alergi: '+s.a.join(', ')+'</b>':s.r); }
+function renderIng(){ const c=cur(), bad=new Set(conf(S.cur)), lock=c.served||S.done;
+  $('ing').innerHTML=ING.map(g=>{ const q=c.tray[g.id]||0; return '<div class="it'+(bad.has(g.id)?' bad':'')+'"><span>'+g.e+'</span><span class="nm">'+g.n+'<small>'+g.kcal+' kkal'+(g.a?' · '+g.a:'')+'</small></span><button class="m" data-a="sub" data-v="'+g.id+'"'+(lock?' disabled':'')+'>−</button><b>'+q+'</b><button data-a="add" data-v="'+g.id+'"'+(lock?' disabled':'')+'>+</button></div>'; }).join(''); }
+function renderAct(){ const c=cur(), ok=!S.done&&!c.served&&!conf(S.cur).length&&rep(c.tray).ok&&Object.keys(c.tray).length>0;
+  $('act').innerHTML=S.done?'<button class="btn" data-a="again">Main Lagi</button>':'<button class="btn sec" data-a="clear"'+(c.served?' disabled':'')+'>Kosongkan</button><button class="btn" data-a="serve"'+(ok?'':' disabled')+'>Sajikan Ompreng</button>'; }
+function renderHud(){ $('hud').innerHTML='<span>👨‍🍳 KEPALA KOKI SPPG</span><span>Skor '+score()+'</span><span>'+S.st.filter(x=>x.served).length+'/'+STU.length+' Siswa</span>'; }
+function renderLive(){ renderNut(); renderMsg(); renderIng(); renderAct(); renderHud(); Scene.sync(); }
+function renderAll(){ renderStu(); renderMed(); renderLive(); }
+$('panel').addEventListener('click',e=>{ const b=e.target.closest('[data-a]'); if(!b||b.disabled) return; const a=b.dataset.a,v=b.dataset.v;
+  if(a==='stu') pick(+v); else if(a==='add') add(v,1); else if(a==='sub') add(v,-1); else if(a==='clear') clearTray(); else if(a==='serve') serve(); else if(a==='again'){ reset(); renderAll(); } });
+
+const Scene=(()=>{
+  const cv=$('c'), R=new THREE.WebGLRenderer({canvas:cv,antialias:true}); R.setPixelRatio(Math.min(devicePixelRatio,2));
+  const sc=new THREE.Scene(); sc.background=new THREE.Color(0xf4f7f5);
+  const cam=new THREE.PerspectiveCamera(40,1,.1,100), look=new THREE.Vector3(0,1.1,-.2);
+  sc.add(new THREE.HemisphereLight(0xffffff,0x8a9a9a,.95)); const sun=new THREE.DirectionalLight(0xffffff,.6); sun.position.set(4,10,6); sc.add(sun);
+  const mat=(c,o)=>new THREE.MeshLambertMaterial(Object.assign({color:c},o||{}));
+  const box=(w,h,d,c,x,y,z,p,m)=>{const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m||mat(c));o.position.set(x,y,z);(p||sc).add(o);return o;};
+  function label(txt,w,bg,fg){ const k=document.createElement('canvas'); k.width=256;k.height=64; const g=k.getContext('2d'); g.fillStyle=bg||'rgba(255,255,255,.95)'; g.fillRect(0,0,256,64); g.fillStyle=fg||'#122620'; let f=txt.length<6?56:txt.length<9?38:28; g.font='bold '+f+'px sans-serif'; while(g.measureText(txt).width>238&&f>10){f-=2;g.font='bold '+f+'px sans-serif';} g.textAlign='center'; g.textBaseline='middle'; g.fillText(txt,128,34);
+    const s=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(k)})); s.scale.set(w,w/4,1); return s; }
+  function flat(txt,w,bg,fg,x,y,z,p){ const s=label(txt,w,bg,fg), m=new THREE.Mesh(new THREE.PlaneGeometry(w,w/4),new THREE.MeshBasicMaterial({map:s.material.map})); m.position.set(x,y,z); (p||sc).add(m); return m; }
+  
+  box(40,.2,30,0xe2e8f0,0,-.1,0); box(40,7,.3,0x0d5c3f,0,3.5,-5.2); flat('SPPG SMAN 3 Surakarta · MBG Sehat',7.5,'#ffffff','#0d5c3f',0,5.3,-5);
+  box(7.6,1,7.6,0xd1c2a5,0,.5,-.5);
+  
+  const crates=[]; ING.forEach((g,i)=>{ const col=i%4,row=(i/4)|0, top=1+row*.35, z=-1.3-row;
+    if(col===0&&row>0) box(5,row*.35,1,0xb8a88c,0,1+row*.175,z); const p=new THREE.Group(); p.position.set(-1.65+col*1.1,top+.32,z); sc.add(p);
+    const b=box(.9,.62,.7,g.c,0,0,0,p); b.userData.id=g.id; crates.push(b); box(.95,.08,.75,0x6b4a2b,0,-.34,0,p); const l=label(g.e+' '+g.n,1.2); l.position.set(0,.62,0); p.add(l); });
+  
+  const om=new THREE.Group(); om.position.set(0,1.06,1.2); om.scale.setScalar(1.25); sc.add(om); box(2.8,.08,1.8,0xcfd8dc,0,0,0,om);
+  const rim=mat(0x90a4ae);
+  [[0,-.9,2.8,.06],[0,.9,2.8,.06],[-1.4,0,.06,1.8],[1.4,0,.06,1.8],[-.2,0,.06,1.8],[.6,-.1,1.6,.06],[.7,.4,.06,1]].forEach(d=>box(d[2],.14,d[3],0,d[0],.07,d[1],om,rim));
+  const CMP={A:{x:-.8,z:0,c:3},B:{x:.6,z:-.5,c:5},C:{x:.25,z:.45,c:3},D:{x:1.05,z:.45,c:2}};
+  [['NASI',-.8,.78],['LAUK',.6,-.22],['SAYUR',.25,.78],['BUAH',1.05,.78]].forEach(l=>{ const m=flat(l[0],.55,'#eceff1','#37474f',l[1],.06,l[2],om); m.rotation.x=-Math.PI/2; });
+  const items=new THREE.Group(); om.add(items); let tag=null, hasConf=false;
+  
+  function sync(){
+    while(items.children.length) items.remove(items.children[0]);
+    const c=S.st[S.cur], bad=new Set(conf(S.cur)), cnt={A:0,B:0,C:0,D:0}; let newest=null;
+    for(const id in c.tray) for(let q=0;q<c.tray[id];q++){ const g=ingBy[id], k=g.cat, P=CMP[k], n=cnt[k]++;
+      const m=new THREE.Mesh(new THREE.SphereGeometry(.15,12,10),mat(g.c,bad.has(id)?{emissive:0xff0000}:{}));
+      if(k==='A') m.scale.set(1.3,.7,1.3); m.userData.y=.2+((n/(P.c*2))|0)*.2; m.userData.id=id; m.userData.born=0;
+      m.position.set(P.x+((n%P.c)-(P.c-1)/2)*.3,m.userData.y,P.z+(((n/P.c)|0)%2?.2:-.15)); items.add(m); if(id===S.lastId) newest=m; }
+    if(newest) newest.userData.born=performance.now();
+    hasConf=bad.size>0;
+    if(tag) sc.remove(tag); const s=STU[S.cur];
+    tag=hasConf?label('⚠️ ALERGI '+s.a.join(' + ').toUpperCase()+'!',3.4,'#dc2626','#ffffff'):label('Ompreng: '+s.n+' · '+s.k,3.2,'#0d5c3f','#ffffff');
+    tag.position.set(0,3.0,1.2); sc.add(tag); }
+  const ray=new THREE.Raycaster(), ptr=new THREE.Vector2();
+  cv.addEventListener('pointerdown',e=>{ const r=cv.getBoundingClientRect(); ptr.set(((e.clientX-r.left)/r.width)*2-1,-((e.clientY-r.top)/r.height)*2+1); ray.setFromCamera(ptr,cam); const h=ray.intersectObjects(crates)[0]; if(h) add(h.object.userData.id,1); });
+  function fit(){ const w=$('stage').clientWidth, h=$('stage').clientHeight; if(!w||!h) return; R.setSize(w,h,false); cam.aspect=w/h; cam.updateProjectionMatrix();
+    const dist=Math.max(8.2,3.7/(Math.tan(cam.fov*Math.PI/360)*cam.aspect)); cam.position.set(look.x,look.y+dist*.6,look.z+dist*.8); cam.lookAt(look); }
+  new ResizeObserver(fit).observe($('stage')); fit();
+  const clock=new THREE.Clock(); let t=0;
+  (function loop(){ requestAnimationFrame(loop); const dt=Math.min(clock.getDelta(),.05); t+=dt; const now=performance.now();
+    rim.color.setHex(hasConf&&Math.sin(t*10)>0?0xff3030:0x90a4ae);
+    items.children.forEach(m=>{ if(m.userData.born){ const k=(now-m.userData.born)/300; if(k>=1){ m.position.y=m.userData.y; m.userData.born=0; } else m.position.y=m.userData.y+(1-k)*(1-k)*.9; } });
+    if(tag) tag.position.y=3.0+Math.sin(t*2)*.04;
+    R.render(sc,cam); })();
+  return {sync,fit};
+})();
+renderAll(); toast('Selamat bertugas, Kepala Koki SPPG SMAN 3 Surakarta!');
+</script>
+</body>
+</html>
